@@ -168,7 +168,7 @@ service /covid19 on new graphql:Listener(9000) {
     }
 
     // resource function to insert an item  
-    remote function add(string title, float price) returns ItemData|error {
+    remote function addItem(string title, float price) returns ItemData|error {
         
         Item item = {title: title, price: price,quantity: 0, color: "", material: "", intended_for: "", includes: ""};
         check addItem(item);
