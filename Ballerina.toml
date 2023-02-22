@@ -1,0 +1,13 @@
+[package]
+org = "shiro"
+name = "covid19"
+version = "0.1.0"
+distribution = "2201.3.2"
+
+[[platform.java11.dependency]]
+groupId = "mysql"
+artifactId = "mysql-connector-java"
+version = "8.0.26"
+
+[build-options]
+observabilityIncluded = true
