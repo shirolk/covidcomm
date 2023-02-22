@@ -158,23 +158,22 @@ service /covid19 on new graphql:Listener(9000) {
             items = [];
         }
 
-        //CovidEntry? covidEntry = covidEntriesTable[isoCode];
-        //Item? item;
-        Item? item_to_send;
-
         foreach Item item in items {
             if (item.code == code)
             {
-                item_to_send = item;
                 return new ItemData(item);
             }
         }
         return;
     }
 
-    remote function add(Item entry) returns ItemData {
-        //covidEntriesTable.add(entry);
-        return new ItemData(entry);
+    // resource function to insert an item  
+    remote function add(string title, float price) returns ItemData|error {
+        
+        Item item = {title: title, price: price,quantity: 0, color: "", material: "", intended_for: "", includes: ""};
+        check addItem(item);
+        return new ItemData(item);
     }
+    
 }
 
