@@ -26,7 +26,7 @@ public type Item record {|
 
 # order 
 public type Order record {|
-    int id?;
+    int id;
     int item_code;
     float price;
     int amount;
@@ -35,21 +35,12 @@ public type Order record {|
     string card;
 |};
 
-
-public type CovidEntry record {|
-    readonly string isoCode;
-    string country;
-    decimal cases?;
-    decimal deaths?;
-    decimal recovered?;
-    decimal active?;
+// notification 
+public type Notification record {|
+    string customer;
+    int iten_code;
+    string customer_email;
 |};
-
-table<CovidEntry> key(isoCode) covidEntriesTable = table [
-    {isoCode: "AFG", country: "Afghanistan", cases: 159303, deaths: 7386, recovered: 146084, active: 5833},
-    {isoCode: "SL", country: "Sri Lanka", cases: 598536, deaths: 15243, recovered: 568637, active: 14656},
-    {isoCode: "US", country: "USA", cases: 69808350, deaths: 880976, recovered: 43892277, active: 25035097}
-];
 
 
 public distinct service class ItemData {
@@ -90,53 +81,69 @@ public distinct service class ItemData {
 
 }
 
+// service class for orderData
+public distinct service class OrderData {
+    private final readonly & Order entryRecord;
 
-public distinct service class CovidData {
-    private final readonly & CovidEntry entryRecord;
-
-    function init(CovidEntry entryRecord) {
+    function init(Order entryRecord) {
         self.entryRecord = entryRecord.cloneReadOnly();
     }
 
-    resource function get isoCode() returns string {
-        return self.entryRecord.isoCode;
+    resource function get id() returns int {
+        return self.entryRecord.id;
     }
 
-    resource function get country() returns string {
-        return self.entryRecord.country;
+    resource function get item_code() returns int {
+        return self.entryRecord.item_code;
     }
 
-    resource function get cases() returns decimal? {
-        if self.entryRecord.cases is decimal {
-            return self.entryRecord.cases / 1000;
-        }
-        return;
+    resource function get price() returns float {
+        return self.entryRecord.price;
     }
 
-    resource function get deaths() returns decimal? {
-        if self.entryRecord.deaths is decimal {
-            return self.entryRecord.deaths / 1000;
-        }
-        return;
+    resource function get amount() returns int {
+        return self.entryRecord.amount;
     }
 
-    resource function get recovered() returns decimal? {
-        if self.entryRecord.recovered is decimal {
-            return self.entryRecord.recovered / 1000;
-        }
-        return;
+    resource function get total() returns int {
+        return self.entryRecord.total;
     }
 
-    resource function get active() returns decimal? {
-        if self.entryRecord.active is decimal {
-            return self.entryRecord.active / 1000;
-        }
-        return;
+    resource function get customer() returns string {
+        return self.entryRecord.customer;
     }
+
+    resource function get card() returns string {
+        return self.entryRecord.card;
+    }
+
 }
 
+// service class for notificationData
+public distinct service class NotificationData {
+    private final readonly & Notification entryRecord;
+
+    function init(Notification entryRecord) {
+        self.entryRecord = entryRecord.cloneReadOnly();
+    }
+
+    resource function get customer() returns string {
+        return self.entryRecord.customer;
+    }
+
+    resource function get iten_code() returns int {
+        return self.entryRecord.iten_code;
+    }
+
+    resource function get customer_email() returns string {
+        return self.entryRecord.customer_email;
+    }
+
+}
+
+
 service /covid19 on new graphql:Listener(9000) {
-    resource function get all() returns ItemData[] {
+    resource function get allitems() returns ItemData[] {
         Item[] items;
         Item[]|error? unionResult = getAllItems();
         if unionResult is Item[] {
@@ -149,7 +156,29 @@ service /covid19 on new graphql:Listener(9000) {
         //return covidEntries.map(entry => new CovidData(entry));
     }
 
-    resource function get filter(int code) returns ItemData? {
+    resource function get allorders() returns OrderData[] {
+        Order[] orders;
+        Order[]|error? unionResult = getAllOrders();
+        if unionResult is Order[] {
+            orders = unionResult;
+        } else {
+            orders = [];
+        }
+        return orders.map(entry => new OrderData(entry));
+    }
+
+    resource function get allnotifications() returns NotificationData[] {
+        Notification[] notifications;
+        Notification[]|error? unionResult = getAllNotifications();
+        if unionResult is Notification[] {
+            notifications = unionResult;
+        } else {
+            notifications = [];
+        }
+        return notifications.map(entry => new NotificationData(entry));
+    }
+
+    resource function get filteritems(int code) returns ItemData? {
         Item[] items;
         Item[]|error? unionResult = getAllItems();
         if unionResult is Item[] {
@@ -167,12 +196,39 @@ service /covid19 on new graphql:Listener(9000) {
         return;
     }
 
+    // resource function to get all notifications for an item
+    resource function get itemnotifications(int code) returns Notification[] {
+        Notification[] itemNotifications;
+        Notification[]|error? unionResult = getNotificationsForItem(code);
+        if unionResult is Notification[] {
+            itemNotifications = unionResult;
+        } else {
+            itemNotifications = [];
+        }
+
+        return itemNotifications;
+    }
+
     // resource function to insert an item  
     remote function addItem(string title, float price) returns ItemData|error {
         
         Item item = {title: title, price: price,quantity: 0, color: "", material: "", intended_for: "", includes: ""};
         check addItem(item);
         return new ItemData(item);
+    }
+
+    // resource function to inssert an order
+    remote function addOrder(int id, int item_code, float price, int amount, int total, string customer, string card) returns Order|error {
+        Order orderItem = {id: id, item_code: item_code, price: price, amount: amount, total: total, customer: customer, card: card};
+        check addOrder(orderItem);
+        return orderItem;
+    }
+
+    // resource function to insert a notification
+    remote function addNotification(string customer, int item_code, string customer_email) returns Notification|error {
+        Notification notificationItem = {customer: customer, iten_code: item_code, customer_email: customer_email};
+        check addNotification(notificationItem);
+        return notificationItem;
     }
     
 }
