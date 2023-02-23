@@ -1,4 +1,5 @@
 import ballerina/sql;
+//import ballerina/io;
 
 # A function to get all items in the catalog   
     # + return - json array of items in the catalog or error
@@ -27,6 +28,23 @@ import ballerina/sql;
         check resultStream.close();
         return orders;
     }
+
+    // a function to get all notifications in the database
+    # + return - json array of notifications in the database or error
+    # + return - error if there is an error while getting the notifications
+     function getAllNotifications() returns Notification[]|error {
+        // Send a response back to the caller.
+        Notification[] notifications = [];
+        stream<Notification, error?> resultStream = dbClient->query(`SELECT * FROM notifications`);
+        //error? errorvar =  from Notification notification in resultStream
+        check from Notification notification in resultStream
+        do {
+            notifications.push(notification);
+        };
+        //io:println(errorvar);
+        check resultStream.close();
+        return notifications;
+     }
 
     //a function to add items to the catalog database   
     #+ item - item to be added to the catalog
@@ -98,7 +116,7 @@ import ballerina/sql;
         // Send a response back to the caller.
        sql:ExecutionResult _ = check dbClient->execute(`
         INSERT INTO notifications (customer, item_code, customer_email)
-       VALUES (${notification.customer}, ${notification.iten_code}, ${notification.customer_email})
+       VALUES (${notification.customer}, ${notification.item_code}, ${notification.customer_email})
       `);
      }
 
@@ -109,21 +127,6 @@ import ballerina/sql;
         // Send a response back to the caller.
         Notification[] notifications = [];
         stream<Notification, error?> resultStream = dbClient->query(`SELECT * FROM notifications WHERE item_code = ${code}`);
-        check from Notification notification in resultStream
-        do {
-            notifications.push(notification);
-        };
-        check resultStream.close();
-        return notifications;
-     }
-
-     // a function to get all notifications in the database
-    # + return - json array of notifications in the database or error
-    # + return - error if there is an error while getting the notifications
-     function getAllNotifications() returns Notification[]|error {
-        // Send a response back to the caller.
-        Notification[] notifications = [];
-        stream<Notification, error?> resultStream = dbClient->query(`SELECT * FROM notifications`);
         check from Notification notification in resultStream
         do {
             notifications.push(notification);

@@ -30,7 +30,7 @@ public type Order record {|
     int item_code;
     float price;
     int amount;
-    int total;
+    float total;
     string customer;
     string card;
 |};
@@ -38,7 +38,7 @@ public type Order record {|
 // notification 
 public type Notification record {|
     string customer;
-    int iten_code;
+    int item_code;
     string customer_email;
 |};
 
@@ -105,7 +105,7 @@ public distinct service class OrderData {
         return self.entryRecord.amount;
     }
 
-    resource function get total() returns int {
+    resource function get total() returns float {
         return self.entryRecord.total;
     }
 
@@ -132,7 +132,7 @@ public distinct service class NotificationData {
     }
 
     resource function get iten_code() returns int {
-        return self.entryRecord.iten_code;
+        return self.entryRecord.item_code;
     }
 
     resource function get customer_email() returns string {
@@ -218,7 +218,7 @@ service /covid19 on new graphql:Listener(9000) {
     }
 
     // resource function to inssert an order
-    remote function addOrder(int id, int item_code, float price, int amount, int total, string customer, string card) returns Order|error {
+    remote function addOrder(int id, int item_code, float price, int amount, float total, string customer, string card) returns Order|error {
         Order orderItem = {id: id, item_code: item_code, price: price, amount: amount, total: total, customer: customer, card: card};
         check addOrder(orderItem);
         return orderItem;
@@ -226,7 +226,7 @@ service /covid19 on new graphql:Listener(9000) {
 
     // resource function to insert a notification
     remote function addNotification(string customer, int item_code, string customer_email) returns Notification|error {
-        Notification notificationItem = {customer: customer, iten_code: item_code, customer_email: customer_email};
+        Notification notificationItem = {customer: customer, item_code: item_code, customer_email: customer_email};
         check addNotification(notificationItem);
         return notificationItem;
     }
